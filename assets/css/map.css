@@ -13,8 +13,8 @@
 
 .map-tile {
 	border: 0.2px solid;
-	width: 4em;
-	height: 4em;
+	width: 3em;
+	height: 3em;
 }
 
 .map-tile-count {
@@ -27,6 +27,6 @@
 .map-brick {
 	background-color: dimgray;
 	border: 0.2px solid;
-	width: 4em;
-	height: 4em;
+	width: 3em;
+	height: 3em;
 }

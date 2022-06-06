@@ -12,7 +12,7 @@ defmodule GameWeb.LobbyLive do
   def handle_event("play", _, socket) do
     path = Routes.game_path(socket, :game, name: socket.assigns.name)
 
-    {:noreply, push_redirect(socket, to: path, replace: true)}
+    {:noreply, push_redirect(socket, to: path)}
   end
 
   @impl true
