@@ -2,6 +2,7 @@
 @import "./phoenix.css";
 @import "./map.css";
 @import "./buttons.css";
+@import "./player.css";
 
 /* Alerts and form errors used by phx.new */
 .alert {
