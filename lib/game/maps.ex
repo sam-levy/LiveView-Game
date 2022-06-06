@@ -33,9 +33,11 @@ defmodule Game.Maps do
     end
   end
 
-  def walkable_tile?(%GameMap{} = map, {_x, _y} = position) do
-    inside_borders?(map, position) and not is_brick?(map, position)
+  def walkable_tile?(%GameMap{bricks: bricks, dimensions: {dx, dy}}, {px, py} = position) when px > 0 and px <= dx and py > 0 and py <= dy do
+    !MapSet.member?(bricks, position)
   end
+
+  def walkable_tile?(%GameMap{}, {_px, _py} = _position), do: false
 
   def get_random_map_walkable_tile(map_name) when is_binary(map_name) do
     case fetch_map(map_name) do
@@ -64,8 +66,8 @@ defmodule Game.Maps do
   end
 
   def build_matrix(%GameMap{dimensions: {dx, dy}}) do
-    for y <- dy..1 do
-      for x <- 1..dx do
+    for y <- dy+1..0 do
+      for x <- 0..dx+1 do
         {x, y}
       end
     end
@@ -93,12 +95,4 @@ defmodule Game.Maps do
   defp build_new_position({x, y}, :upper_right), do: {x + 1, y + 1}
   defp build_new_position({x, y}, :bottom_left), do: {x - 1, y - 1}
   defp build_new_position({x, y}, :bottom_right), do: {x - 1, y + 1}
-
-  def is_brick?(%GameMap{bricks: bricks}, position), do: MapSet.member?(bricks, position)
-
-  defp inside_borders?(%GameMap{dimensions: {dx, dy}}, {px, py})
-       when px > 0 and px <= dx and py > 0 and py <= dy,
-       do: true
-
-  defp inside_borders?(_map, _position), do: false
 end

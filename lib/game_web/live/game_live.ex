@@ -114,17 +114,13 @@ defmodule GameWeb.GameLive do
       <div class="map">
         <%= for rows <- Maps.build_matrix(@map) do %>
           <div class="map-row">
-            <.brick/>
-
             <%= for position <- rows do %>
-              <%= if Maps.is_brick?(@map, position) do %>
-                <.brick/>
-              <% else %>
+              <%= if Maps.walkable_tile?(@map, position) do %>
                 <.tile players={players_from_position(@live_players_by_position, position, @my_player_name)} my_player_name={@my_player_name}/>
+              <% else %>
+                <.brick/>
               <% end %>
             <% end %>
-
-            <.brick/>
           </div>
         <% end %>
       </div>
@@ -146,11 +142,12 @@ defmodule GameWeb.GameLive do
         </div>
       </div>
 
-      <h2 class="">
-        <%= if @respawn_timer > 0 do %>
-          Respawn in: <%= @respawn_timer %>
-        <% end %>
-      </h2>
+      <%= if @respawn_timer > 0 do %>
+        <div class="">
+          <h2>YOU DIED!</h2>
+          <h3>Respawn in: <%= @respawn_timer %></h3>
+        </div>
+      <% end %>
 
       <button phx-click="attack">ATTACK!</button>
     </div>
