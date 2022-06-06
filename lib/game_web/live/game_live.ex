@@ -10,6 +10,11 @@ defmodule GameWeb.GameLive do
   end
 
   @impl true
+  def terminate(_reason, socket) do
+    Players.remove_player(socket.assigns.my_player_name)
+  end
+
+  @impl true
   def handle_params(%{"name" => my_player_name}, _url, socket) do
     my_player = Players.provide_player(my_player_name)
     {:ok, map} = Maps.fetch_map(my_player.map_name)
@@ -58,6 +63,13 @@ defmodule GameWeb.GameLive do
   @impl true
   def handle_info({:killed_player, player}, socket) do
     {:noreply, assign_updated_player(socket, player)}
+  end
+
+  @impl true
+  def handle_info({:removed_player, player}, socket) do
+    players_by_name = Map.drop(socket.assigns.players_by_name, [player.name])
+
+    {:noreply, assign_players(socket, players_by_name)}
   end
 
   @impl true

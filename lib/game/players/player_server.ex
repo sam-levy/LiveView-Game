@@ -23,6 +23,10 @@ defmodule Game.Players.PlayerServer do
     GenServer.call(process_name(player_name), :kill_player)
   end
 
+  def remove_player(player_name) when is_binary(player_name) do
+    GenServer.stop(process_name(player_name))
+  end
+
   @impl true
   def init(player) do
     {:ok, player}
