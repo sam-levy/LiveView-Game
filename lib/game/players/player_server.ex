@@ -5,15 +5,19 @@ defmodule Game.Players.PlayerServer do
   alias Game.Maps
 
   def start_link(%Player{} = player) do
-    GenServer.start_link(__MODULE__, player, name: name(player.name))
+    GenServer.start_link(__MODULE__, player, name: process_name(player.name))
   end
 
   def get_player(player_name) when is_binary(player_name) do
-    GenServer.call(name(player_name), :get_player)
+    GenServer.call(process_name(player_name), :get_player)
   end
 
   def move_player(player_name, direction) when is_binary(player_name) do
-    GenServer.call(name(player_name), {:move_player, direction})
+    GenServer.call(process_name(player_name), {:move_player, direction})
+  end
+
+  def kill_player(player_name) when is_binary(player_name) do
+    GenServer.call(process_name(player_name), :kill_player)
   end
 
   @impl true
@@ -28,23 +32,18 @@ defmodule Game.Players.PlayerServer do
 
   @impl true
   def handle_call({:move_player, direction}, _from, player) do
-    player = handle_player_movement(player, direction)
+    new_position = Maps.handle_new_position(player.map_name, player.position, direction)
+    player = %{player | position: new_position}
 
     {:reply, player, player}
   end
 
-  defp name(player_name), do: PlayerRegistry.build_process_name(player_name)
+  @impl true
+  def handle_call(:kill_player, _from, player) do
+    player = %{player | alive?: false}
 
-  defp handle_player_movement(player, direction) do
-    new_position = build_new_position(player.position, direction)
-
-    if Maps.walkable_tile?(player.map_name, new_position),
-      do: %{player | position: new_position},
-      else: player
+    {:reply, player, player}
   end
 
-  defp build_new_position({x, y}, :up), do: {x, y + 1}
-  defp build_new_position({x, y}, :down), do: {x, y - 1}
-  defp build_new_position({x, y}, :left), do: {x - 1, y}
-  defp build_new_position({x, y}, :right), do: {x + 1, y}
+  defp process_name(player_name), do: PlayerRegistry.build_process_name(player_name)
 end
