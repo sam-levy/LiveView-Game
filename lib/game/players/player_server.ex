@@ -8,11 +8,11 @@ defmodule Game.Players.PlayerServer do
     GenServer.start_link(__MODULE__, player, name: name(player.name))
   end
 
-  def get_player(player_name) do
+  def get_player(player_name) when is_binary(player_name) do
     GenServer.call(name(player_name), :get_player)
   end
 
-  def move_player(player_name, direction) do
+  def move_player(player_name, direction) when is_binary(player_name) do
     GenServer.call(name(player_name), {:move_player, direction})
   end
 
