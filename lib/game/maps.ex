@@ -72,8 +72,9 @@ defmodule Game.Maps do
   end
 
   def list_surroundings(map_or_map_name, {_x, _y} = position) do
-    @valid_directions
+    @valid_directions ++ [:upper_left, :upper_right, :bottom_left, :bottom_right]
     |> Enum.map(&build_new_position(position, &1))
+    |> then(&[position | &1])
     |> Enum.filter(&walkable_tile?(map_or_map_name, &1))
   end
 
@@ -88,6 +89,10 @@ defmodule Game.Maps do
   defp build_new_position({x, y}, :down), do: {x, y - 1}
   defp build_new_position({x, y}, :left), do: {x - 1, y}
   defp build_new_position({x, y}, :right), do: {x + 1, y}
+  defp build_new_position({x, y}, :upper_left), do: {x - 1, y + 1}
+  defp build_new_position({x, y}, :upper_right), do: {x + 1, y + 1}
+  defp build_new_position({x, y}, :bottom_left), do: {x - 1, y - 1}
+  defp build_new_position({x, y}, :bottom_right), do: {x - 1, y + 1}
 
   def is_brick?(%GameMap{bricks: bricks}, position), do: MapSet.member?(bricks, position)
 
