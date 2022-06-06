@@ -180,27 +180,31 @@ defmodule GameWeb.GameLive do
   def tile(%{players: [player | _]} = assigns) do
     ~H"""
     <div class="map-tile">
-      <.player player={player} my_player_name={@my_player_name}/>
-
-      <span class="">
+      <div class="map-tile-count">
         <%= Enum.count(@players) %>
-      </span>
+      </div>
+
+      <.player player={player} my_player_name={@my_player_name}/>
     </div>
     """
   end
 
   def player(%{player: %{name: name}, my_player_name: name} = assigns) do
     ~H"""
-    <div style="background-color: green;">
-      <%= name %>
+    <div class="player" style="background-color: darkgreen;">
+      <div>
+        <%= name %>
+      </div>
     </div>
     """
   end
 
   def player(assigns) do
     ~H"""
-    <div style="color: white; background-color: darkred;">
-      <%= @player.name %>
+    <div class="player" style="background-color: darkred;">
+      <div>
+        <%= @player.name %>
+      </div>
     </div>
     """
   end
