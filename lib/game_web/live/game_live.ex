@@ -6,7 +6,7 @@ defmodule GameWeb.GameLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket, temporary_assigns: [players_by_position: %{}]}
+    {:ok, socket, temporary_assigns: [live_players_by_position: %{}]}
   end
 
   @impl true
@@ -24,7 +24,7 @@ defmodule GameWeb.GameLive do
         map: map,
         my_player_name: my_player.name,
         players_by_name: players_by_name,
-        players_by_position: build_players_by_position(players_by_name)
+        live_players_by_position: list_live_players_by_position(players_by_name)
       )
 
     {:noreply, socket}
@@ -44,7 +44,7 @@ defmodule GameWeb.GameLive do
     socket =
       assign(socket,
         players_by_name: players_by_name,
-        players_by_position: build_players_by_position(players_by_name)
+        live_players_by_position: list_live_players_by_position(players_by_name)
       )
 
     {:noreply, socket}
@@ -55,6 +55,15 @@ defmodule GameWeb.GameLive do
     socket.assigns.my_player_name
     |> Players.get_player()
     |> Players.move_player(String.to_existing_atom(direction))
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("attack", _, socket) do
+    socket.assigns.my_player_name
+    |> Players.get_player()
+    |> Players.attack_surroundings()
 
     {:noreply, socket}
   end
@@ -72,7 +81,7 @@ defmodule GameWeb.GameLive do
               <%= if Maps.is_brick?(@map, position) do %>
                 <.brick/>
               <% else %>
-                <.tile players={players_from_position(@players_by_position, position, @my_player_name)}/>
+                <.tile players={players_from_position(@live_players_by_position, position, @my_player_name)} my_player_name={@my_player_name}/>
               <% end %>
             <% end %>
 
@@ -98,7 +107,7 @@ defmodule GameWeb.GameLive do
         </div>
       </div>
 
-      <button phx-click="move" phx-value-direction="up">ATTACK!</button>
+      <button phx-click="attack">ATTACK!</button>
     </div>
     """
   end
@@ -115,44 +124,76 @@ defmodule GameWeb.GameLive do
     """
   end
 
-  def tile(%{players: players} = assigns) do
+  def tile(%{players: [player]} = assigns) do
     ~H"""
     <div class="map-tile">
-      <%= for player <- players do %>
-        <div class="">
-          <%= player.name %>
-        </div>
-      <% end %>
+      <.player player={player} my_player_name={@my_player_name}/>
     </div>
     """
   end
 
-  defp build_players_by_position(players_by_name) do
+  def tile(%{players: [player | _]} = assigns) do
+    ~H"""
+    <div class="map-tile">
+      <.player player={player} my_player_name={@my_player_name}/>
+
+      <span class="">
+        <%= Enum.count(@players) %>
+      </span>
+    </div>
+    """
+  end
+
+  def player(%{player: %{name: name}, my_player_name: name} = assigns) do
+    ~H"""
+    <div style="background-color: green;">
+      <%= name %>
+    </div>
+    """
+  end
+
+  def player(assigns) do
+    ~H"""
+    <div style="background-color: darkred;">
+      <%= @player.name %>
+    </div>
+    """
+  end
+
+  defp list_live_players_by_position(players_by_name) do
     players_by_name
     |> Map.values()
-    |> Enum.reduce(%{}, fn player, acc ->
-      case Map.get(acc, player.position) do
-        nil -> Map.put(acc, player.position, [player])
-        players -> Map.put(acc, player.position, [player | players])
-      end
+    |> Enum.reduce(%{}, fn
+      %{alive?: true} = player, acc ->
+        case Map.get(acc, player.position) do
+          nil -> Map.put(acc, player.position, [player])
+          players -> Map.put(acc, player.position, [player | players])
+        end
+
+      _player, acc ->
+        acc
     end)
   end
 
-  defp players_from_position(players_by_position, position, my_player_name)
+  defp players_from_position(live_players_by_position, position, my_player_name)
        when is_binary(my_player_name) do
     my_player = Players.get_player(my_player_name)
 
-    players_from_position(players_by_position, position, my_player)
+    players_from_position(live_players_by_position, position, my_player)
   end
 
-  defp players_from_position(players_by_position, position, %{position: position} = my_player) do
-    case Map.get(players_by_position, position, []) do
+  defp players_from_position(
+         live_players_by_position,
+         position,
+         %{alive?: true, position: position} = my_player
+       ) do
+    case Map.get(live_players_by_position, position, []) do
       [my_player] -> [my_player]
       players -> [my_player | Enum.reject(players, &(&1.name == my_player.name))]
     end
   end
 
-  defp players_from_position(players_by_position, position, _my_player) do
-    Map.get(players_by_position, position, [])
+  defp players_from_position(live_players_by_position, position, _my_player) do
+    Map.get(live_players_by_position, position, [])
   end
 end
