@@ -21,5 +21,17 @@ defmodule Game.Players.Names do
     frost voice paper frog smoke star hamster
   )
 
-  def generate, do: Enum.random(@adjectives) <> " " <> Enum.random(@nouns)
+  def generate, do: random_adjective() <> " " <> random_noun()
+
+  def random_adjective do
+    @adjectives
+    |> Enum.random()
+    |> String.capitalize()
+  end
+
+  def random_noun do
+    @nouns
+    |> Enum.random()
+    |> String.capitalize()
+  end
 end
