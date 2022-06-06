@@ -17,6 +17,7 @@ defmodule GameWeb.Router do
   scope "/", GameWeb do
     pipe_through :browser
 
+    live "/", LobbyLive, :lobby
     live "/game", GameLive, :game
   end
 end
