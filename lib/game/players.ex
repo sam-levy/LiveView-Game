@@ -1,6 +1,11 @@
 defmodule Game.Players do
   alias Game.Maps
-  alias Game.Players.{Player, PlayerRegistry, PlayerServer, PlayerSupervisor}
+  alias Game.Maps.Map, as: GameMap
+  alias Game.Players.{Names, Player, PlayerRegistry, PlayerServer, PlayerSupervisor}
+
+  defdelegate generate_name, to: Names, as: :generate
+
+  defguardp is_valid_direction(direction) when direction in [:up, :down, :left, :right]
 
   def provide_player(player_name) when is_binary(player_name) do
     if PlayerRegistry.player_exist?(player_name) do
@@ -10,19 +15,46 @@ defmodule Game.Players do
       |> build_player()
       |> PlayerSupervisor.start_player()
 
-      PlayerServer.get_player(player_name)
+      player_name
+      |> PlayerServer.get_player()
+      |> tap(&broadcast_player(&1, :new_player))
     end
   end
 
-  def move_player(%Player{name: player_name}, direction)
-      when direction in ~w[up down left right]a do
-    PlayerServer.move_player(player_name, direction)
+  def get_player(player_name), do: PlayerServer.get_player(player_name)
+
+  def move_player(%Player{name: player_name}, direction) when is_valid_direction(direction) do
+    player_name
+    |> PlayerServer.move_player(direction)
+    |> tap(&broadcast_player(&1, :updated_player))
+  end
+
+  def list_players_by(%GameMap{name: map_name}) do
+    PlayerSupervisor
+    |> Supervisor.which_children()
+    |> Enum.map(fn {_, pid, _, _} ->
+      [player_name] = Registry.keys(PlayerRegistry, pid)
+
+      PlayerServer.get_player(player_name)
+    end)
+    |> Enum.filter(&(&1.map_name == map_name))
   end
 
   defp build_player(player_name) do
     map_name = Maps.get_random_map_name()
-    position = Maps.get_random_valid_map_position(map_name)
+    position = Maps.get_random_map_walkable_tile(map_name)
 
     Player.new(name: player_name, map_name: map_name, position: position)
   end
+
+  def subscribe_to_players(%GameMap{} = map) do
+    Phoenix.PubSub.subscribe(Game.PubSub, map_topic(map))
+  end
+
+  defp broadcast_player(%Player{} = player, event) do
+    Phoenix.PubSub.broadcast(Game.PubSub, map_topic(player), {event, player})
+  end
+
+  defp map_topic(%Player{} = player), do: "map_name:" <> player.map_name
+  defp map_topic(%GameMap{} = map), do: "map_name:" <> map.name
 end
