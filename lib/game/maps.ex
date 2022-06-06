@@ -1,6 +1,8 @@
 defmodule Game.Maps do
   alias Game.Maps.Map, as: GameMap
 
+  @valid_directions [:up, :down, :left, :right]
+
   maps_file = Application.app_dir(:game, "priv/static/assets/maps.json")
   @external_resource maps_file
 
@@ -22,9 +24,11 @@ defmodule Game.Maps do
                   {map.name, map}
                 end)
 
-  def walkable_tile?(map_name, {_x, _y} = tile) when is_binary(map_name) do
+  defguard is_valid_direction(direction) when direction in @valid_directions
+
+  def walkable_tile?(map_name, {_x, _y} = position) when is_binary(map_name) do
     case fetch_map(map_name) do
-      {:ok, map} -> walkable_tile?(map, tile)
+      {:ok, map} -> walkable_tile?(map, position)
       error -> error
     end
   end
@@ -66,6 +70,24 @@ defmodule Game.Maps do
       end
     end
   end
+
+  def list_surroundings(map_or_map_name, {_x, _y} = position) do
+    @valid_directions
+    |> Enum.map(&build_new_position(position, &1))
+    |> Enum.filter(&walkable_tile?(map_or_map_name, &1))
+  end
+
+  def handle_new_position(map_or_map_name, {_x, _y} = position, direction)
+      when is_valid_direction(direction) do
+    new_position = build_new_position(position, direction)
+
+    if walkable_tile?(map_or_map_name, new_position), do: new_position, else: position
+  end
+
+  defp build_new_position({x, y}, :up), do: {x, y + 1}
+  defp build_new_position({x, y}, :down), do: {x, y - 1}
+  defp build_new_position({x, y}, :left), do: {x - 1, y}
+  defp build_new_position({x, y}, :right), do: {x + 1, y}
 
   def is_brick?(%GameMap{bricks: bricks}, position), do: MapSet.member?(bricks, position)
 
