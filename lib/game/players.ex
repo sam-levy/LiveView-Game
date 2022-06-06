@@ -33,7 +33,8 @@ defmodule Game.Players do
 
   def get_player(player_name), do: PlayerServer.get_player(player_name)
 
-  def move_player(%Player{alive?: true, name: player_name}, direction) when is_valid_direction(direction) do
+  def move_player(%Player{alive?: true, name: player_name}, direction)
+      when is_valid_direction(direction) do
     player_name
     |> PlayerServer.move_player(direction)
     |> tap(&broadcast_player(&1, :updated_player))
@@ -79,7 +80,8 @@ defmodule Game.Players do
     Phoenix.PubSub.subscribe(Game.PubSub, map_topic(map))
   end
 
-  def broadcast_player(%Player{} = player, event) when event in [:new_player, :updated_player, :killed_player, :removed_player] do
+  def broadcast_player(%Player{} = player, event)
+      when event in [:new_player, :updated_player, :killed_player, :removed_player] do
     Phoenix.PubSub.broadcast(Game.PubSub, map_topic(player), {event, player})
   end
 

@@ -49,7 +49,10 @@ defmodule GameWeb.GameLive do
   end
 
   @impl true
-  def handle_info({:killed_player, %{name: name} = player}, %{assigns: %{my_player_name: name}} = socket) do
+  def handle_info(
+        {:killed_player, %{name: name} = player},
+        %{assigns: %{my_player_name: name}} = socket
+      ) do
     socket =
       socket
       |> assign_updated_player(player)
@@ -97,7 +100,8 @@ defmodule GameWeb.GameLive do
   end
 
   @impl true
-  def handle_event(event, _, %{assigns: %{respawn_timer: timer}} = socket) when timer != 0 and event in ["move", "attack"] do
+  def handle_event(event, _, %{assigns: %{respawn_timer: timer}} = socket)
+      when timer != 0 and event in ["move", "attack"] do
     {:noreply, socket}
   end
 

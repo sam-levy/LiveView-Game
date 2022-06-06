@@ -33,7 +33,8 @@ defmodule Game.Maps do
     end
   end
 
-  def walkable_tile?(%GameMap{bricks: bricks, dimensions: {dx, dy}}, {px, py} = position) when px > 0 and px <= dx and py > 0 and py <= dy do
+  def walkable_tile?(%GameMap{bricks: bricks, dimensions: {dx, dy}}, {px, py} = position)
+      when px > 0 and px <= dx and py > 0 and py <= dy do
     !MapSet.member?(bricks, position)
   end
 
@@ -66,15 +67,15 @@ defmodule Game.Maps do
   end
 
   def build_matrix(%GameMap{dimensions: {dx, dy}}) do
-    for y <- dy+1..0 do
-      for x <- 0..dx+1 do
+    for y <- (dy + 1)..0 do
+      for x <- 0..(dx + 1) do
         {x, y}
       end
     end
   end
 
   def list_surroundings(map_or_map_name, {_x, _y} = position) do
-    @valid_directions ++ [:upper_left, :upper_right, :bottom_left, :bottom_right]
+    (@valid_directions ++ [:upper_left, :upper_right, :bottom_left, :bottom_right])
     |> Enum.map(&build_new_position(position, &1))
     |> then(&[position | &1])
     |> Enum.filter(&walkable_tile?(map_or_map_name, &1))
