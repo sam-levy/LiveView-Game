@@ -3,7 +3,7 @@ defmodule Game.Maps do
 
   @valid_directions [:up, :down, :left, :right]
 
-  maps_file = Application.app_dir(:game, "priv/static/assets/maps.json")
+  maps_file = Application.app_dir(:game, "priv/static/maps.json")
   @external_resource maps_file
 
   maps =
