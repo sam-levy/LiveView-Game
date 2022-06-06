@@ -1,11 +1,11 @@
 defmodule Game.Players do
+  import Game.Maps, only: [is_valid_direction: 1]
+
   alias Game.Maps
   alias Game.Maps.Map, as: GameMap
   alias Game.Players.{Names, Player, PlayerRegistry, PlayerServer, PlayerSupervisor}
 
   defdelegate generate_name, to: Names, as: :generate
-
-  defguardp is_valid_direction(direction) when direction in [:up, :down, :left, :right]
 
   def provide_player(player_name) when is_binary(player_name) do
     if PlayerRegistry.player_exist?(player_name) do
@@ -27,6 +27,20 @@ defmodule Game.Players do
     player_name
     |> PlayerServer.move_player(direction)
     |> tap(&broadcast_player(&1, :updated_player))
+  end
+
+  def attack_surroundings(%Player{} = attacker_player) do
+    {:ok, map} = Maps.fetch_map(attacker_player.map_name)
+    attacker_surroundings = Maps.list_surroundings(map, attacker_player.position)
+
+    map
+    |> list_players_by()
+    |> Enum.filter(&(&1.name != attacker_player.name and &1.position in attacker_surroundings))
+    |> Enum.each(fn player ->
+      player.name
+      |> PlayerServer.kill_player()
+      |> tap(&broadcast_player(&1, :updated_player))
+    end)
   end
 
   def list_players_by(%GameMap{name: map_name}) do
