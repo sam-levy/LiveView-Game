@@ -1,0 +1,21 @@
+.buttons-wrapper {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.buttons-d-row {
+	display: flex;
+	justify-content: center;
+}
+
+.buttons-d {
+	cursor: pointer;
+	font-size: 3em;
+	user-select: none;
+}
+
+.buttons-attack {
+	background-color: darkred;
+	border-color: darkred;
+}
