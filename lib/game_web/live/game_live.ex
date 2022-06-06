@@ -20,11 +20,12 @@ defmodule GameWeb.GameLive do
     if connected?(socket), do: Players.subscribe_to_players(map)
 
     socket =
-      assign(socket,
+      socket
+      |> assign_players(players_by_name)
+      |> assign(
         map: map,
         my_player_name: my_player.name,
-        players_by_name: players_by_name,
-        live_players_by_position: list_live_players_by_position(players_by_name)
+        respawn_timer: 0
       )
 
     {:noreply, socket}
@@ -39,14 +40,52 @@ defmodule GameWeb.GameLive do
 
   @impl true
   def handle_info({event, player}, socket) when event in [:new_player, :updated_player] do
+    {:noreply, assign_updated_player(socket, player)}
+  end
+
+  @impl true
+  def handle_info({:killed_player, %{name: name} = player}, %{assigns: %{my_player_name: name}} = socket) do
+    socket =
+      socket
+      |> assign_updated_player(player)
+      |> assign(respawn_timer: 5)
+
+    Process.send_after(self(), :decrease_respawn_timer, 1_000)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:killed_player, player}, socket) do
+    {:noreply, assign_updated_player(socket, player)}
+  end
+
+  @impl true
+  def handle_info(:decrease_respawn_timer, socket) do
+    if socket.assigns.respawn_timer > 0 do
+      Process.send_after(self(), :decrease_respawn_timer, 1_000)
+
+      {:noreply, update(socket, :respawn_timer, &(&1 - 1))}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  defp assign_updated_player(socket, player) do
     players_by_name = Map.put(socket.assigns.players_by_name, player.name, player)
 
-    socket =
-      assign(socket,
-        players_by_name: players_by_name,
-        live_players_by_position: list_live_players_by_position(players_by_name)
-      )
+    assign_players(socket, players_by_name)
+  end
 
+  defp assign_players(socket, players_by_name) do
+    assign(socket,
+      players_by_name: players_by_name,
+      live_players_by_position: list_live_players_by_position(players_by_name)
+    )
+  end
+
+  @impl true
+  def handle_event(event, _, %{assigns: %{respawn_timer: timer}} = socket) when timer != 0 and event in ["move", "attack"] do
     {:noreply, socket}
   end
 
@@ -107,6 +146,12 @@ defmodule GameWeb.GameLive do
         </div>
       </div>
 
+      <h2 class="">
+        <%= if @respawn_timer > 0 do %>
+          Respawn in: <%= @respawn_timer %>
+        <% end %>
+      </h2>
+
       <button phx-click="attack">ATTACK!</button>
     </div>
     """
@@ -154,7 +199,7 @@ defmodule GameWeb.GameLive do
 
   def player(assigns) do
     ~H"""
-    <div style="background-color: darkred;">
+    <div style="color: white; background-color: darkred;">
       <%= @player.name %>
     </div>
     """

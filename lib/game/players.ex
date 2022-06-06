@@ -23,13 +23,15 @@ defmodule Game.Players do
 
   def get_player(player_name), do: PlayerServer.get_player(player_name)
 
-  def move_player(%Player{name: player_name}, direction) when is_valid_direction(direction) do
+  def move_player(%Player{alive?: true, name: player_name}, direction) when is_valid_direction(direction) do
     player_name
     |> PlayerServer.move_player(direction)
     |> tap(&broadcast_player(&1, :updated_player))
   end
 
-  def attack_surroundings(%Player{} = attacker_player) do
+  def move_player(%Player{alive?: false} = player, _direction), do: player
+
+  def attack_surroundings(%Player{alive?: true} = attacker_player) do
     {:ok, map} = Maps.fetch_map(attacker_player.map_name)
     attacker_surroundings = Maps.list_surroundings(map, attacker_player.position)
 
@@ -39,9 +41,11 @@ defmodule Game.Players do
     |> Enum.each(fn player ->
       player.name
       |> PlayerServer.kill_player()
-      |> tap(&broadcast_player(&1, :updated_player))
+      |> tap(&broadcast_player(&1, :killed_player))
     end)
   end
+
+  def attack_surroundings(%Player{alive?: false}), do: :error
 
   def list_players_by(%GameMap{name: map_name}) do
     PlayerSupervisor
@@ -65,7 +69,7 @@ defmodule Game.Players do
     Phoenix.PubSub.subscribe(Game.PubSub, map_topic(map))
   end
 
-  defp broadcast_player(%Player{} = player, event) do
+  def broadcast_player(%Player{} = player, event) when event in [:new_player, :updated_player, :killed_player] do
     Phoenix.PubSub.broadcast(Game.PubSub, map_topic(player), {event, player})
   end
 
