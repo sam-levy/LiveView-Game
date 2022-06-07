@@ -26,6 +26,13 @@ defmodule Game.Maps do
 
   defguard is_valid_direction(direction) when direction in @valid_directions
 
+  def fetch_map(map_name) do
+    case Map.fetch(@maps_by_name, map_name) do
+      {:ok, map} -> {:ok, map}
+      :error -> {:error, "map not found"}
+    end
+  end
+
   def walkable_tile?(map_name, {_x, _y} = position) when is_binary(map_name) do
     case fetch_map(map_name) do
       {:ok, map} -> walkable_tile?(map, position)
@@ -59,13 +66,6 @@ defmodule Game.Maps do
     map_name
   end
 
-  def fetch_map(map_name) do
-    case Map.fetch(@maps_by_name, map_name) do
-      {:ok, map} -> {:ok, map}
-      :error -> {:error, "map not found"}
-    end
-  end
-
   def build_matrix(%GameMap{dimensions: {dx, dy}}) do
     for y <- (dy + 1)..0 do
       for x <- 0..(dx + 1) do
@@ -74,7 +74,7 @@ defmodule Game.Maps do
     end
   end
 
-  def list_surroundings(map_or_map_name, {_x, _y} = position) do
+  def list_walkable_surroundings(map_or_map_name, {_x, _y} = position) do
     (@valid_directions ++ [:upper_left, :upper_right, :bottom_left, :bottom_right])
     |> Enum.map(&build_new_position(position, &1))
     |> then(&[position | &1])
@@ -95,5 +95,5 @@ defmodule Game.Maps do
   defp build_new_position({x, y}, :upper_left), do: {x - 1, y + 1}
   defp build_new_position({x, y}, :upper_right), do: {x + 1, y + 1}
   defp build_new_position({x, y}, :bottom_left), do: {x - 1, y - 1}
-  defp build_new_position({x, y}, :bottom_right), do: {x - 1, y + 1}
+  defp build_new_position({x, y}, :bottom_right), do: {x + 1, y - 1}
 end

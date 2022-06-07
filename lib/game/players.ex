@@ -44,7 +44,7 @@ defmodule Game.Players do
 
   def attack_surroundings(%Player{alive?: true} = attacker_player) do
     {:ok, map} = Maps.fetch_map(attacker_player.map_name)
-    attacker_surroundings = Maps.list_surroundings(map, attacker_player.position)
+    attacker_surroundings = Maps.list_walkable_surroundings(map, attacker_player.position)
 
     map
     |> list_players_by()
