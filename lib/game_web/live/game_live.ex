@@ -131,10 +131,10 @@ defmodule GameWeb.GameLive do
     {:noreply, socket}
   end
 
-  @move_keys_up ["ArrowUp", "k", "e"]
-  @move_keys_down ["ArrowDown", "j", "d"]
-  @move_keys_left ["ArrowLeft", "h", "s"]
-  @move_keys_right ["ArrowRight", "l", "f"]
+  @move_keys_up ["ArrowUp", "k", "w"]
+  @move_keys_down ["ArrowDown", "j", "s"]
+  @move_keys_left ["ArrowLeft", "h", "a"]
+  @move_keys_right ["ArrowRight", "l", "d"]
 
   @valid_move_keys @move_keys_up ++ @move_keys_down ++ @move_keys_left ++ @move_keys_right
 
