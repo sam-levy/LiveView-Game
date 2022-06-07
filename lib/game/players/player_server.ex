@@ -1,6 +1,8 @@
 defmodule Game.Players.PlayerServer do
   use GenServer, restart: :transient
 
+  import Game.Maps, only: [is_valid_direction: 1]
+
   alias Game.Players
   alias Game.Players.{Player, PlayerRegistry}
   alias Game.Maps
@@ -15,7 +17,9 @@ defmodule Game.Players.PlayerServer do
     GenServer.call(process_name(player_name), :get_player)
   end
 
-  def move_player(player_name, direction) when is_binary(player_name) do
+  def move_player(player_name, direction)
+      when is_binary(player_name)
+      when is_valid_direction(direction) do
     GenServer.call(process_name(player_name), {:move_player, direction})
   end
 

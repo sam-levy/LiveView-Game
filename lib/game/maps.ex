@@ -62,7 +62,7 @@ defmodule Game.Maps do
   def fetch_map(map_name) do
     case Map.fetch(@maps_by_name, map_name) do
       {:ok, map} -> {:ok, map}
-      :error -> {:error, :not_found}
+      :error -> {:error, "map not found"}
     end
   end
 
