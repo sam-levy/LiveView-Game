@@ -23,6 +23,11 @@ defmodule Game.Players.PlayerServerTest do
       assert PlayerServer.move_player(player.name, :down) == %Player{player | position: {2, 1}}
       assert PlayerServer.move_player(player.name, :left) == %Player{player | position: {1, 1}}
     end
+
+    test "doesn't move a player when the new position is a brick", %{player: player} do
+      assert PlayerServer.move_player(player.name, :left) == %Player{player | position: {1, 1}}
+      assert PlayerServer.move_player(player.name, :down) == %Player{player | position: {1, 1}}
+    end
   end
 
   describe "kill_player/1" do
