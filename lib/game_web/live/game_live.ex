@@ -203,6 +203,15 @@ defmodule GameWeb.GameLive do
 
       <button phx-click="attack">ATTACK!</button>
     </div>
+
+    <ul style="font-size: 0.8em;">
+      <li>UP: Arrow up, K or W</li>
+      <li>DOWN: Arrow down, J or S</li>
+      <li>LEFT: Arrow left, H or A</li>
+      <li>RIGHT: Arrow right, L or D</li>
+      <li>ATACK!: Space bar</li>
+    </ul>
+
     """
   end
 
