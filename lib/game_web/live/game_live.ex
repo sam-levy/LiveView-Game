@@ -69,6 +69,21 @@ defmodule GameWeb.GameLive do
   end
 
   @impl true
+  def handle_info(
+        {:removed_player, %{name: name} = player},
+        %{assigns: %{my_player_name: name}} = socket
+      ) do
+    players_by_name = Map.drop(socket.assigns.players_by_name, [player.name])
+
+    socket =
+      socket
+      |> assign_players(players_by_name)
+      |> push_redirect(to: Routes.lobby_path(socket, :lobby), replace: true)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:removed_player, player}, socket) do
     players_by_name = Map.drop(socket.assigns.players_by_name, [player.name])
 

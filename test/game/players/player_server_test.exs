@@ -18,15 +18,23 @@ defmodule Game.Players.PlayerServerTest do
 
   describe "move_player/2" do
     test "moves a player", %{player: player} do
-      assert PlayerServer.move_player(player.name, :up) == %Player{player | position: {1, 2}}
-      assert PlayerServer.move_player(player.name, :right) == %Player{player | position: {2, 2}}
-      assert PlayerServer.move_player(player.name, :down) == %Player{player | position: {2, 1}}
-      assert PlayerServer.move_player(player.name, :left) == %Player{player | position: {1, 1}}
+      assert %Player{position: {1, 2}, last_moved_at: last_moved_at} =
+               PlayerServer.move_player(player.name, :up)
+
+      assert last_moved_at != player.last_moved_at
+
+      assert %Player{position: {2, 2}} = PlayerServer.move_player(player.name, :right)
+      assert %Player{position: {2, 1}} = PlayerServer.move_player(player.name, :down)
+      assert %Player{position: {1, 1}} = PlayerServer.move_player(player.name, :left)
     end
 
     test "doesn't move a player when the new position is a brick", %{player: player} do
-      assert PlayerServer.move_player(player.name, :left) == %Player{player | position: {1, 1}}
-      assert PlayerServer.move_player(player.name, :down) == %Player{player | position: {1, 1}}
+      assert %Player{position: {1, 1}, last_moved_at: last_moved_at} =
+               PlayerServer.move_player(player.name, :left)
+
+      assert last_moved_at != player.last_moved_at
+
+      assert %Player{position: {1, 1}} = PlayerServer.move_player(player.name, :down)
     end
   end
 

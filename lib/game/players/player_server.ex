@@ -7,7 +7,10 @@ defmodule Game.Players.PlayerServer do
   alias Game.Players.{Player, PlayerRegistry}
   alias Game.Maps
 
-  @death_timeout 5_000
+  # Five seconds
+  @respawn_timeout 5_000
+  # One minute
+  @remove_timeout 60_000
 
   def start_link(%Player{} = player) do
     GenServer.start_link(__MODULE__, player, name: process_name(player.name))
@@ -33,6 +36,8 @@ defmodule Game.Players.PlayerServer do
 
   @impl true
   def init(player) do
+    Process.send_after(self(), :remove_player, @remove_timeout)
+
     {:ok, player}
   end
 
@@ -44,7 +49,7 @@ defmodule Game.Players.PlayerServer do
   @impl true
   def handle_call({:move_player, direction}, _from, player) do
     new_position = Maps.handle_new_position(player.map_name, player.position, direction)
-    player = %{player | position: new_position}
+    player = %{player | position: new_position, last_moved_at: NaiveDateTime.utc_now()}
 
     {:reply, player, player}
   end
@@ -53,7 +58,7 @@ defmodule Game.Players.PlayerServer do
   def handle_call(:kill_player, _from, player) do
     player = %{player | alive?: false}
 
-    Process.send_after(self(), :respawn_player, @death_timeout)
+    Process.send_after(self(), :respawn_player, @respawn_timeout)
 
     {:reply, player, player}
   end
@@ -66,6 +71,23 @@ defmodule Game.Players.PlayerServer do
     Players.broadcast_player(player, :updated_player)
 
     {:noreply, player}
+  end
+
+  @impl true
+  def handle_info(:remove_player, player) do
+    three_mins_ago = NaiveDateTime.utc_now() |> NaiveDateTime.add(-180)
+
+    case NaiveDateTime.compare(player.last_moved_at, three_mins_ago) do
+      :lt ->
+        Players.broadcast_player(player, :removed_player)
+
+        {:stop, :normal, player}
+
+      _ ->
+        Process.send_after(self(), :remove_player, @remove_timeout)
+
+        {:noreply, player}
+    end
   end
 
   defp process_name(player_name), do: PlayerRegistry.build_process_name(player_name)
