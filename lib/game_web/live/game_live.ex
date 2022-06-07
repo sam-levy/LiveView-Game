@@ -123,10 +123,46 @@ defmodule GameWeb.GameLive do
     {:noreply, socket}
   end
 
+  def handle_event("player_action", %{"key" => " "}, socket) do
+    socket.assigns.my_player_name
+    |> Players.get_player()
+    |> Players.attack_surroundings()
+
+    {:noreply, socket}
+  end
+
+  @move_keys_up ["ArrowUp", "k", "e"]
+  @move_keys_down ["ArrowDown", "j", "d"]
+  @move_keys_left ["ArrowLeft", "h", "s"]
+  @move_keys_right ["ArrowRight", "l", "f"]
+
+  @valid_move_keys @move_keys_up ++ @move_keys_down ++ @move_keys_left ++ @move_keys_right
+
+  def handle_event("player_action", %{"key" => key}, socket) when key in @valid_move_keys do
+    socket.assigns.my_player_name
+    |> Players.get_player()
+    |> move_player(key)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("player_action", _, socket), do: {:noreply, socket}
+
+  defp move_player(player, key) when key in @move_keys_up, do: Players.move_player(player, :up)
+
+  defp move_player(player, key) when key in @move_keys_down,
+    do: Players.move_player(player, :down)
+
+  defp move_player(player, key) when key in @move_keys_left,
+    do: Players.move_player(player, :left)
+
+  defp move_player(player, key) when key in @move_keys_right,
+    do: Players.move_player(player, :right)
+
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="map-wrapper">
+    <div class="map-wrapper" phx-window-keyup="player_action">
       <div class="map">
         <%= for rows <- Maps.build_matrix(@map) do %>
           <div class="map-row">
