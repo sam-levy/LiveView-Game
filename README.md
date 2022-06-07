@@ -32,6 +32,10 @@ mix deps.get
 
 After installing the dependencies you are rady to play!
 
+## Testing
+
+Run all the tests with `mix test`.
+
 ## Playing
 
 Start Phoenix server with `mix phx.server` or inside IEx with `iex -S mix phx.server`.
