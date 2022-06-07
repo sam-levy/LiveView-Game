@@ -36,6 +36,12 @@ After installing the dependencies you are rady to play!
 
 Run all the tests with `mix test`.
 
+## Deploying
+
+This project was deployed using Fly.io. Please [check Fly.io Phoenix deployment guide](https://fly.io/docs/getting-started/elixir/).
+
+For other deployement guides please [check Phoenix deployment guides](https://hexdocs.pm/phoenix/).
+
 ## Playing
 
 Start Phoenix server with `mix phx.server` or inside IEx with `iex -S mix phx.server`.
